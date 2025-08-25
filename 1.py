@@ -1,35 +1,32 @@
 import requests
 import time
-
-# === Cookies copy từ F12 ===
-cookies = {
-    'INGRESSCOOKIE': '1756138140.637.344.358970|9de6a539c14bab7f9073ed2b75abad44',
-    'modal-csrf-token': 'ziZO8j9FIEJ1cwpnRvctEzDpxk94bT',
-    'modal-session': 'se-rTs8miUne8ydHYWaWzpbfV:xx-Ccmpp2PP2KKSi2GQRxBsUb',
-    'ajs_anonymous_id': 'e40f2e27-bb9b-456c-a62e-98521fdc63e3',
-    'ph_phc_kkmXwgjY4ZQBwJ6fQ9Q6DaLLOz1bG44LtZH0rAhg1NJ_posthog': '%7B%22distinct_id%22%3A%220198e1fd-773e-718d-ba8c-9f4aaf12ff38%22%2C%22%24sesid%22%3A%5B1756138213072%2C%220198e1fd-773d-7f27-919a-15536991e14a%22%2C1756138141500%5D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fmodal.com%2Fsignup%3Fnext%3D%252Fplayground%22%7D%7D',
-}
-
-# === Headers copy từ F12 ===
 headers = {
-    'accept': '*/*',
-    'accept-language': 'vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5',
+    'sec-ch-ua-platform': '"Windows"',
+    'Referer': '',
+    'sec-ch-ua': '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"',
+    'sec-ch-ua-mobile': '?0',
+    'baggage': 'sentry-environment=production,sentry-release=88da3a24bf1546fd9824631c12ead4b5,sentry-public_key=d75f7cb747cd4fe8ac03973ae3d39fec,sentry-trace_id=3b325a8709c75374cd5531ff533bd72f,sentry-sample_rand=0.9756898109671025',
+    'sentry-trace': '3b325a8709c75374cd5531ff533bd72f-a0318167eadd4c1a',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
     'content-type': 'application/json',
-    'origin': 'https://modal.com',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                  '(KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
 }
 
-# === URL API (copy từ cURL) ===
-url = "https://modal.com/api/playground/phamquanghuyfb010/run"
-
-# === Payload (code bạn muốn chạy) ===
 json_data = {
     'tutorial': 'get_started',
-    'code': 'print("Hello from Modal CMD tool!")',
+    'code': 'import modal\nimport time\nimport subprocess, tempfile, os\n\n# ---- Khởi tạo app ----\napp = modal.App("nodejs-workers")\n\n# ---- Build image ----\nimage = (\n    modal.Image.from_registry("nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.11")\n    .pip_install("cupy-cuda12x")\n    .apt_install("git", "curl", "gnupg")\n    .run_commands(\n        "curl -fsSL https://deb.nodesource.com/setup_18.x | bash -",\n        "apt-get install -y nodejs"\n    )\n)\n\n# ---- Worker ----\n@app.function(image=image, timeout=3600, concurrency_limit=10)\ndef run_tool(cookies: str):\n    # Clone repo nếu chưa có\n    if not os.path.exists("ha1"):\n        subprocess.run(\n            ["git", "clone", "https://github.com/vudeptrai79006-jpg/tool.git"],\n            check=True\n        )\n\n    # Ghi cookies ra file tạm\n    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".json") as f:\n        f.write(cookies)\n        cookie_path = f.name\n\n    # Chạy Node.js tool trong thư mục repo\n    process = subprocess.Popen(\n        ["node", "app.js", "--cookies", cookie_path],\n        cwd="ha1"\n    )\n    process.wait()\n\n# ---- Entry point ----\n@app.local_entrypoint()\ndef main():\n    cookies_list = [\n        \'{"session":"se-111"}\',\n        \'{"session":"se-222"}\',\n        \'{"session":"se-333"}\',\n    ]\n\n    i = 0\n    while True:\n        cookies = cookies_list[i % len(cookies_list)]\n        print(f"🚀 Spawn worker {i} với cookies: {cookies}")\n        run_tool.spawn(cookies)\n        i += 1\n        time.sleep(5)  # giãn cách spawn',
     'modalEnvironment': 'main',
-    'winsize': {'rows': 16, 'cols': 93},
+    'winsize': {
+        'rows': 16,
+        'cols': 93,
+    },
 }
+
+response = requests.post('https://modal.com/api/playground/vudeptrai79006/run', headers=headers, json=json_data)
+
+# Note: json_data will not be serialized by requests
+# exactly as it was in the original request.
+#data = '{"tutorial":"get_started","code":"import modal\\nimport time\\nimport subprocess, tempfile, os\\n\\n# ---- Khởi tạo app ----\\napp = modal.App(\\"nodejs-workers\\")\\n\\n# ---- Build image ----\\nimage = (\\n    modal.Image.from_registry(\\"nvidia/cuda:12.4.0-devel-ubuntu22.04\\", add_python=\\"3.11\\")\\n    .pip_install(\\"cupy-cuda12x\\")\\n    .apt_install(\\"git\\", \\"curl\\", \\"gnupg\\")\\n    .run_commands(\\n        \\"curl -fsSL https://deb.nodesource.com/setup_18.x | bash -\\",\\n        \\"apt-get install -y nodejs\\"\\n    )\\n)\\n\\n# ---- Worker ----\\n@app.function(image=image, timeout=3600, concurrency_limit=10)\\ndef run_tool(cookies: str):\\n    # Clone repo nếu chưa có\\n    if not os.path.exists(\\"ha1\\"):\\n        subprocess.run(\\n            [\\"git\\", \\"clone\\", \\"https://github.com/vudeptrai79006-jpg/tool.git\\"],\\n            check=True\\n        )\\n\\n    # Ghi cookies ra file tạm\\n    with tempfile.NamedTemporaryFile(\\"w\\", delete=False, suffix=\\".json\\") as f:\\n        f.write(cookies)\\n        cookie_path = f.name\\n\\n    # Chạy Node.js tool trong thư mục repo\\n    process = subprocess.Popen(\\n        [\\"node\\", \\"app.js\\", \\"--cookies\\", cookie_path],\\n        cwd=\\"ha1\\"\\n    )\\n    process.wait()\\n\\n# ---- Entry point ----\\n@app.local_entrypoint()\\ndef main():\\n    cookies_list = [\\n        \'{\\"session\\":\\"se-111\\"}\',\\n        \'{\\"session\\":\\"se-222\\"}\',\\n        \'{\\"session\\":\\"se-333\\"}\',\\n    ]\\n\\n    i = 0\\n    while True:\\n        cookies = cookies_list[i % len(cookies_list)]\\n        print(f\\"🚀 Spawn worker {i} với cookies: {cookies}\\")\\n        run_tool.spawn(cookies)\\n        i += 1\\n        time.sleep(5)  # giãn cách spawn","modalEnvironment":"main","winsize":{"rows":16,"cols":93}}'.encode()
+#response = requests.post('https://modal.com/api/playground/vudeptrai79006/run', headers=headers, data=data)
 
 
 def main():
